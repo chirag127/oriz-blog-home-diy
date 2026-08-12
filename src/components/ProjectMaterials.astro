@@ -1,0 +1,201 @@
+---
+/**
+ * ProjectMaterials — "What you'll need" panel for home-DIY posts.
+ *
+ * A workshop cut-sheet pinned to the pegboard: a materials list + tools list
+ * + an honest cost range badge. MDX posts drop this in-line near the top.
+ *
+ * Usage in MDX:
+ *   import ProjectMaterials from '~/components/ProjectMaterials.astro'
+ *   <ProjectMaterials
+ *     materials={['Paint (1 L)', 'Primer', 'Painter\'s tape']}
+ *     tools={['Roller', 'Brush 2"', 'Drop cloth']}
+ *     costRange="₹800–₹1,500"
+ *     time="3–4 h"
+ *     difficulty="Beginner"
+ *   />
+ *
+ * All props are optional — omit tools or materials if not relevant.
+ */
+export interface Props {
+  materials?: string[]
+  tools?: string[]
+  costRange?: string
+  time?: string
+  difficulty?: 'Beginner' | 'Intermediate' | 'Advanced'
+}
+
+const {
+  materials = [],
+  tools = [],
+  costRange,
+  time,
+  difficulty,
+} = Astro.props
+
+const difficultyColor: Record<string, string> = {
+  Beginner: 'var(--v-health)',
+  Intermediate: 'var(--v-finance)',
+  Advanced: 'var(--danger-color)',
+}
+const dColor = difficulty ? (difficultyColor[difficulty] ?? 'var(--ink-mute)') : 'var(--ink-mute)'
+---
+
+<aside class="pm-sheet" aria-label="Project materials and tools">
+  <header class="pm-head">
+    <span class="pm-pin" aria-hidden="true"></span>
+    <span class="pm-pin pm-pin--r" aria-hidden="true"></span>
+    <span class="pm-title mono">Cut sheet</span>
+    {(costRange || time || difficulty) && (
+      <ul class="pm-badges mono" aria-label="Project specs">
+        {costRange && <li class="pm-badge pm-badge--cost"><span class="pm-badge-k">Cost</span>{costRange}</li>}
+        {time && <li class="pm-badge"><span class="pm-badge-k">Time</span>{time}</li>}
+        {difficulty && <li class="pm-badge" style={`--diff-color:${dColor}`}><span class="pm-badge-k">Level</span><span class="pm-diff">{difficulty}</span></li>}
+      </ul>
+    )}
+  </header>
+
+  <div class="pm-body">
+    {materials.length > 0 && (
+      <section class="pm-col">
+        <h4 class="pm-col-h mono"><span class="pm-tick pm-tick--mat" aria-hidden="true"></span>Materials</h4>
+        <ul class="pm-list">
+          {materials.map((m) => <li class="pm-item">{m}</li>)}
+        </ul>
+      </section>
+    )}
+
+    {tools.length > 0 && (
+      <section class="pm-col">
+        <h4 class="pm-col-h mono"><span class="pm-tick pm-tick--tool" aria-hidden="true"></span>Tools</h4>
+        <ul class="pm-list">
+          {tools.map((t) => <li class="pm-item pm-item--tool">{t}</li>)}
+        </ul>
+      </section>
+    )}
+  </div>
+</aside>
+
+<style>
+  .pm-sheet {
+    position: relative;
+    margin: 2rem 0;
+    border: 2px solid var(--blueprint);
+    border-radius: var(--radius-card);
+    background:
+      linear-gradient(color-mix(in oklab, var(--paper) 80%, transparent), color-mix(in oklab, var(--paper) 80%, transparent)),
+      repeating-linear-gradient(0deg, var(--grid) 0 1px, transparent 1px 22px),
+      repeating-linear-gradient(90deg, var(--grid) 0 1px, transparent 1px 22px);
+    overflow: visible;
+  }
+
+  /* two push-pin dots pinning the sheet to the board */
+  .pm-pin {
+    position: absolute;
+    top: -9px; left: 18px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--tape);
+    border: 2px solid var(--tape-ink);
+    box-shadow: 0 2px 3px color-mix(in oklab, var(--ink) 20%, transparent);
+  }
+  .pm-pin--r { left: auto; right: 18px; }
+
+  .pm-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    padding: 0.75rem 1rem 0.65rem;
+    border-bottom: 1.5px dashed var(--rule-strong);
+  }
+
+  .pm-title {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--blueprint);
+    font-weight: 700;
+    flex: 0 0 auto;
+  }
+
+  .pm-badges {
+    list-style: none;
+    padding: 0; margin: 0;
+    display: flex; flex-wrap: wrap; gap: 0.4rem;
+  }
+  .pm-badge {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    font-size: 11px;
+    padding: 0.2rem 0.55rem;
+    background: var(--paper-2);
+    border: 1px solid var(--rule-strong);
+    border-radius: 2px 7px 7px 2px;
+    color: var(--ink);
+  }
+  .pm-badge-k {
+    color: var(--tape-ink);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 9px;
+  }
+  .pm-diff { color: var(--diff-color, var(--ink-mute)); font-weight: 600; }
+
+  .pm-body {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  @media (min-width: 540px) {
+    .pm-body { grid-template-columns: 1fr 1fr; }
+  }
+
+  .pm-col-h {
+    display: flex; align-items: center; gap: 0.4rem;
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-mute); font-weight: 600; margin: 0 0 0.6rem;
+  }
+  .pm-tick {
+    width: 7px; height: 7px;
+    flex: 0 0 auto;
+  }
+  .pm-tick--mat {
+    background: var(--blueprint);
+    clip-path: polygon(50% 0%, 100% 100%, 0% 100%); /* triangle = material chip */
+  }
+  .pm-tick--tool {
+    background: var(--tape);
+    border: 1.5px solid var(--tape-ink);
+    border-radius: 50%;
+  }
+
+  .pm-list {
+    list-style: none;
+    padding: 0; margin: 0;
+    display: flex; flex-direction: column; gap: 0.3rem;
+  }
+  .pm-item {
+    position: relative;
+    padding: 0.25rem 0.5rem 0.25rem 1.1rem;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 1px 5px 5px 1px;
+  }
+  /* checkbox-style tick mark before each item */
+  .pm-item::before {
+    content: '';
+    position: absolute; left: 0.35rem; top: 50%; transform: translateY(-50%);
+    width: 7px; height: 7px;
+    border: 1.5px solid var(--rule-strong);
+    border-radius: 1px;
+  }
+  .pm-item--tool::before {
+    border-color: var(--tape-ink);
+    background: color-mix(in oklab, var(--tape) 20%, transparent);
+  }
+</style>
