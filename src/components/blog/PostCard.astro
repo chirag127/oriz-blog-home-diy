@@ -1,11 +1,10 @@
 ---
 /**
- * PostCard — editorial listing entry ("Signal Press"). One hairline-ruled
- * row (no rounded card, no shadow, no radius): a vertical-coloured kicker
- * rule + desk label, a serif headline, a one-line dek, and a mono meta foot
- * (date · reading time). Used by every listing (index, tag, category,
- * related). The whole entry is one link; the desk kicker deep-links to the
- * category.
+ * PostCard — pegboard tile ("The Workbench"). A card HUNG on the board:
+ * a punched peg-hole at top, a coloured desk edge, tool-tag chips (desk +
+ * category), a serif headline, a clamped dek, and a mono date · reading-time
+ * foot. Used by every listing (blog index, tag, category, related) so the
+ * whole site reads as one pegboard — not a hairline dispatch ledger.
  */
 import type { CollectionEntry } from 'astro:content'
 import { formatPostDate, postVertical, slugifyTag, verticalLabel } from '~/lib/blog'
@@ -17,135 +16,80 @@ export interface Props {
 const { post } = Astro.props
 const { title, description, pubDate, category, readingTime } = post.data
 const href = `/blog/${post.id}`
-const catHref = `/categories/${slugifyTag(category)}/`
 const vert = postVertical(post)
 ---
 
-<article class="post-card" data-vertical={vert}>
-  <a class="post-card-link" href={href}>
-    <span class="post-card-kicker">
-      <span class="post-card-tick" aria-hidden="true"></span>
-      <span class="post-card-desk">{verticalLabel(vert)}</span>
-      <span class="post-card-cat">{category}</span>
+<article class="peg-tile" data-vertical={vert}>
+  <span class="peg-hole" aria-hidden="true"></span>
+  <a class="peg-tile-link" href={href}>
+    <span class="peg-tile-tags mono">
+      <span class="peg-tile-tag peg-tile-tag--desk">{verticalLabel(vert)}</span>
+      <span class="peg-tile-tag">{category}</span>
     </span>
-    <h3 class="post-card-title">{title}</h3>
-    <p class="post-card-desc">{description}</p>
-    <span class="post-card-foot">
+    <h3 class="peg-tile-title">{title}</h3>
+    <p class="peg-tile-dek">{description}</p>
+    <span class="peg-tile-foot">
       <time datetime={pubDate.toISOString()}>{formatPostDate(pubDate)}</time>
-      {readingTime && <span class="post-card-rt">{readingTime}</span>}
+      {readingTime && <span class="peg-tile-rt">· {readingTime}</span>}
     </span>
   </a>
-  <a class="post-card-cat-link" href={catHref} aria-label={`More in ${category}`}>{category}</a>
 </article>
 
 <style>
-  .post-card {
+  .peg-tile {
     position: relative;
-    border-top: 1px solid var(--rule);
     --v: var(--v-personal);
-  }
-  .post-card[data-vertical='dev'] { --v: var(--v-dev); }
-  .post-card[data-vertical='finance'] { --v: var(--v-finance); }
-  .post-card[data-vertical='culture'] { --v: var(--v-culture); }
-  .post-card[data-vertical='health'] { --v: var(--v-health); }
-
-  .post-card-link {
-    display: grid;
-    gap: 0.5rem;
-    padding: 1.125rem 0 1.25rem 0.875rem;
-    text-decoration: none;
-    color: var(--ink);
-    border-left: 2px solid transparent;
-    margin-left: -0.875rem;
-    padding-left: 0.875rem;
-    transition: border-color var(--dur-fast, 120ms) ease;
-  }
-  .post-card-link:hover { border-left-color: var(--v); }
-
-  .post-card-kicker {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--ink-mute);
-  }
-  .post-card-tick {
-    width: 7px;
-    height: 7px;
-    background: var(--v);
-    flex: 0 0 auto;
-  }
-  .post-card-desk { color: var(--v); font-weight: 500; }
-  .post-card-cat {
-    color: var(--ink-mute);
-    border-left: 1px solid var(--rule);
-    padding-left: 0.5rem;
-    letter-spacing: 0.1em;
-  }
-
-  .post-card-title {
-    font-family: var(--font-display);
-    font-size: 1.375rem;
-    font-weight: 600;
-    letter-spacing: -0.015em;
-    line-height: 1.2;
-    margin: 0;
-    color: var(--ink);
-  }
-  .post-card-link:hover .post-card-title { color: var(--accent); }
-
-  .post-card-desc {
-    color: var(--ink-mute);
-    font-family: var(--font-body);
-    font-size: 0.9375rem;
-    line-height: 1.5;
-    margin: 0;
-    max-width: 62ch;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    line-clamp: 2;
-  }
-  .post-card-foot {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    color: var(--ink-mute);
-  }
-  .post-card-rt::before {
-    content: '·';
-    margin-right: 0.75rem;
-    color: var(--rule-strong, var(--rule));
-  }
-  /* Sibling deep-link to category — visually hidden, keyboard reachable. */
-  .post-card-cat-link {
-    position: absolute;
-    inset: 0 0 auto auto;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-  }
-  .post-card-cat-link:focus-visible {
-    width: auto;
-    height: auto;
-    clip: auto;
-    top: 1.125rem;
-    right: 0;
-    padding: 0.125rem 0.5rem;
     background: var(--paper);
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    text-transform: uppercase;
+    border: 1.5px solid var(--rule-strong);
+    border-top: 3px solid var(--v);
+    border-radius: var(--radius-card);
+    box-shadow: 2px 3px 0 color-mix(in oklab, var(--ink) 8%, transparent);
+    transition: transform var(--dur-fast, 120ms) var(--ease-out, ease), box-shadow var(--dur-fast, 120ms) ease;
+  }
+  .peg-tile[data-vertical='dev'] { --v: var(--v-dev); }
+  .peg-tile[data-vertical='finance'] { --v: var(--v-finance); }
+  .peg-tile[data-vertical='culture'] { --v: var(--v-culture); }
+  .peg-tile[data-vertical='health'] { --v: var(--v-health); }
+  .peg-tile:hover { transform: translateY(-3px) rotate(-0.5deg); box-shadow: 3px 6px 0 color-mix(in oklab, var(--ink) 12%, transparent); }
+
+  .peg-hole {
+    position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--paper-2); border: 2px solid var(--rule-strong); z-index: 1;
+  }
+  .peg-hole::after {
+    content: ''; position: absolute; left: 50%; top: -6px; transform: translateX(-50%);
+    width: 3px; height: 8px; background: var(--tape-ink); border-radius: 2px;
+  }
+
+  .peg-tile-link { display: grid; gap: 0.5rem; padding: 1.05rem 1.05rem 1.15rem; text-decoration: none; color: var(--ink); }
+
+  .peg-tile-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .peg-tile-tag {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-mute); background: var(--paper-2);
+    border: 1px solid var(--rule); border-radius: 2px 7px 7px 2px;
+    padding: 0.15rem 0.5rem 0.15rem 0.45rem;
+  }
+  .peg-tile-tag--desk { color: var(--v); border-color: color-mix(in oklab, var(--v) 45%, var(--rule)); font-weight: 600; }
+
+  .peg-tile-title {
+    font-family: var(--font-display); font-size: 1.2rem; font-weight: 600;
+    letter-spacing: -0.015em; line-height: 1.22; margin: 0; color: var(--ink);
+  }
+  .peg-tile-link:hover .peg-tile-title { color: var(--accent); }
+
+  .peg-tile-dek {
+    color: var(--ink-mute); font-family: var(--font-body); font-size: 0.9rem; line-height: 1.5; margin: 0;
+    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical;
+  }
+  .peg-tile-foot {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.05em; color: var(--ink-mute);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .peg-tile { transition: none; }
+    .peg-tile:hover { transform: none; }
   }
 </style>

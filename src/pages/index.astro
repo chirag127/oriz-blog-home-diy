@@ -1,17 +1,16 @@
 ---
 import SeriesSpine from '~/components/SeriesSpine.astro'
 /**
- * /  — oriz-blog homepage ("Signal Press" front page).
+ * /  — "The Workbench" front board (PEGBOARD archetype).
  *
- * Above the fold: a real newspaper masthead — mono dateline (Vol. N · date ·
- * dispatch count), a big Source Serif 4 nameplate, the active-series spine
- * (`●─●─○─○`), and a colour-flagged LEAD STORY. Below: three hairline strata:
- *   1. IN PROGRESS — series spines
- *   2. RECENT      — last 7 posts, each with its vertical desk kicker
- *   3. BY CATEGORY — one typographic row, each desk in its vertical colour
+ * Thesis: this is a pegboard over a workbench, not a magazine front page.
+ *   1. HERO — a pinned blueprint project sheet (the thesis, kept from theme).
+ *   2. ON THE BENCH — in-progress series, each a job card on the rail (spine).
+ *   3. THE BOARD — recent posts as cards HUNG on pegboard hooks, each with a
+ *      punched peg-hole and tool-tag chips (room + reading time).
+ *   4. HOOKS — rooms/tasks as physical hang-tags on a peg rail.
  *
- * No cover images, no cards, no radius. Verticals (Dev/Finance/Culture/
- * Health/Personal) each carry their own marker colour (--v-*).
+ * No centered top-nav card grid. Cards are pinned tiles on a perforated board.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro'
 import {
@@ -29,14 +28,9 @@ import { SITE_CONFIG } from '~/lib/config'
 
 const allPosts = await getPublishedPosts()
 const lead = allPosts[0]
-const recentPosts = allPosts.slice(1, 8)
+const boardPosts = allPosts.slice(1, 10)
 
 const seriesAll = await getSeriesWithCounts()
-// In-progress: series where at least one post exists. We model "published"
-// as the count of currently-published parts. Total is exposed as a heuristic
-// (count + a small tail of "drafting" dots) — for v1 of the v2 design, we
-// just use count for total and count for published, and animate the last
-// dot as `current` so the spine has the signature glyph (`⦿`) visible.
 type InProgress = {
   name: string
   slug: string
@@ -44,7 +38,6 @@ type InProgress = {
   published: number
   current: number
   latest: Date
-  parts: Awaited<ReturnType<typeof getPostsInSeries>>
 }
 const inProgress: InProgress[] = []
 for (const { series, count } of seriesAll.slice(0, 4)) {
@@ -53,9 +46,6 @@ for (const { series, count } of seriesAll.slice(0, 4)) {
     (max, p) => (p.data.pubDate > max ? p.data.pubDate : max),
     parts[0].data.pubDate,
   )
-  // Total must never be less than what's already published (otherwise the
-  // label reads "part 29 of 12"). Use the larger of: published count, the
-  // largest explicit `part` field, or published+1 to hint one more coming.
   const explicitMax = parts.reduce((mx, p) => {
     const v = typeof p.data.part === 'number' ? p.data.part : Number(p.data.part)
     return Number.isFinite(v) ? Math.max(mx, v) : mx
@@ -66,16 +56,14 @@ for (const { series, count } of seriesAll.slice(0, 4)) {
     slug: slugifyTag(series),
     total,
     published: count,
-    current: count, // last filled dot is "current"
+    current: count,
     latest,
-    parts,
   })
 }
 inProgress.sort((a, b) => b.latest.valueOf() - a.latest.valueOf())
 
 const cats = await getCategoriesWithCounts()
 
-// Masthead dateline — "VOL. N · <today, long>" — the front-page nameplate.
 const now = new Date()
 const dateline = now.toLocaleDateString('en-GB', {
   weekday: 'long',
@@ -83,11 +71,10 @@ const dateline = now.toLocaleDateString('en-GB', {
   month: 'long',
   year: 'numeric',
 })
-const volume = now.getFullYear() - 2018 // notebook began 2019 → Vol. 1
+const volume = now.getFullYear() - 2018
 const leadVertical = lead ? postVertical(lead) : 'personal'
 const leadRt = lead ? (lead.data.readingTime ?? readingTimeFor(lead)) : ''
 
-// "Days since" helper for the in-progress rail.
 function ago(date: Date): string {
   const days = Math.floor((Date.now() - date.valueOf()) / 86_400_000)
   if (days < 1) return 'today'
@@ -111,13 +98,13 @@ const jsonLd = {
 ---
 
 <BaseLayout
-  title="The Workbench — Home & DIY"
+  title="The Workbench — Home & DIY projects, tools, and honest costs"
   description={SITE_CONFIG.description}
   jsonLd={jsonLd}
   hideSidebar
 >
-  <div class="container-page">
-    {/* Hero — a blueprint project sheet. Thesis: this is a workbench, not a magazine. */}
+  <div class="board-wrap">
+    {/* ── HERO: pinned blueprint project sheet ────────────────────────── */}
     <section class="masthead" aria-label="Workbench">
       <div class="dateline mono">
         <span class="dateline-vol">Sheet {volume}</span>
@@ -127,6 +114,8 @@ const jsonLd = {
         <span class="dateline-count"><span class="count">{allPosts.length}</span> projects logged</span>
       </div>
       <div class="blueprint">
+        <span class="bp-pin" aria-hidden="true"></span>
+        <span class="bp-pin bp-pin--r" aria-hidden="true"></span>
         <p class="nameplate">Fix it. Sort it. Make it feel like home.</p>
         <p class="nameplate-sub">Small home projects worth doing yourself — real steps, real tool lists, no jargon. Start on a Saturday, finish before dinner.</p>
         <ul class="spec-strip mono" aria-label="What you get">
@@ -135,63 +124,22 @@ const jsonLd = {
           <li><span class="spec-k">Tools</span><span class="spec-v">the basic kit</span></li>
         </ul>
       </div>
-      {inProgress[0] && (
-        <p class="masthead-spine">
-          <span class="masthead-spine-label mono">On the bench</span>
-          <SeriesSpine
-            total={inProgress[0].total}
-            published={inProgress[0].published}
-            current={inProgress[0].current}
-            size="md"
-          />
-          <a class="masthead-spine-name" href={`/series/${inProgress[0].slug}/`}>{inProgress[0].name}</a>
-        </p>
-      )}
     </section>
 
-    {lead && (
-      <>
-        <hr class="tape-rule tape-rule--heavy" />
-        <section class="lead" data-vertical={leadVertical} aria-labelledby="lead-title">
-          <a class="lead-link" href={`/blog/${lead.id}`}>
-            <span class="lead-kicker mono">
-              <span class="lead-tick" aria-hidden="true"></span>
-              <span class="lead-desk">{verticalLabel(leadVertical)}</span>
-              <span class="lead-flag">Start here</span>
-            </span>
-            <h2 id="lead-title" class="lead-title">{lead.data.title}</h2>
-            <p class="lead-dek">{lead.data.description}</p>
-            <span class="lead-meta mono">
-              <time datetime={lead.data.pubDate.toISOString()}>{lead.data.pubDate.toISOString().slice(0, 10)}</time>
-              <span aria-hidden="true">·</span>
-              <span>{leadRt}</span>
-            </span>
-          </a>
-        </section>
-      </>
-    )}
-
-    <hr class="tape-rule" />
-
-    {/* Stratum 1 — IN PROGRESS. */}
+    {/* ── ON THE BENCH: in-progress series (job cards) ────────────────── */}
     {inProgress.length > 0 && (
-      <section class="stratum stratum-progress" aria-labelledby="s-progress">
-        <h2 id="s-progress" class="stratum-h mono">On the bench</h2>
-        <ul class="progress-list">
+      <section class="rail" aria-labelledby="s-bench">
+        <h2 id="s-bench" class="rail-h mono"><span class="rail-tick" aria-hidden="true"></span>On the bench</h2>
+        <ul class="job-list">
           {inProgress.map((s) => (
-            <li class="progress-row">
-              <a class="progress-link" href={`/series/${s.slug}/`}>
-                <span class="progress-name">{s.name}</span>
-                <span class="progress-meta mono">step {s.published} of {s.total}</span>
-                <span class="progress-spine-mount">
-                  <SeriesSpine
-                    total={s.total}
-                    published={s.published}
-                    current={s.current}
-                    size="md"
-                  />
+            <li class="job-row">
+              <a class="job-link" href={`/series/${s.slug}/`}>
+                <span class="job-name">{s.name}</span>
+                <span class="job-meta mono">step {s.published} of {s.total}</span>
+                <span class="job-spine">
+                  <SeriesSpine total={s.total} published={s.published} current={s.current} size="md" />
                 </span>
-                <span class="progress-ago mono">{ago(s.latest)}</span>
+                <span class="job-ago mono">{ago(s.latest)}</span>
               </a>
             </li>
           ))}
@@ -199,430 +147,262 @@ const jsonLd = {
       </section>
     )}
 
-    <hr class="tape-rule" />
-
-    {/* Stratum 2 — RECENT. */}
-    <section class="stratum stratum-recent" aria-labelledby="s-recent">
-      <h2 id="s-recent" class="stratum-h mono">Latest projects</h2>
-      <ul class="recent-list">
-        {recentPosts.map((p) => (
-          <li class="recent-row" data-vertical={postVertical(p)}>
-            <a class="recent-link" href={`/blog/${p.id}`}>
-              <time class="recent-date mono" datetime={p.data.pubDate.toISOString()}>
-                {p.data.pubDate.toISOString().slice(0, 10)}
-              </time>
-              <span class="recent-meat">
-                <span class="recent-kicker mono">
-                  <span class="recent-tick" aria-hidden="true"></span>{verticalLabel(postVertical(p))}
-                </span>
-                <span class="recent-title">{p.data.title}</span>
-                <span class="recent-dek">{p.data.description}</span>
+    {/* ── THE BOARD: lead + recent posts pinned as cards ──────────────── */}
+    <section class="board" aria-labelledby="s-board">
+      <h2 id="s-board" class="rail-h mono"><span class="rail-tick" aria-hidden="true"></span>The board</h2>
+      <ul class="pegboard">
+        {lead && (
+          <li class="peg-card peg-card--lead" data-vertical={leadVertical}>
+            <span class="peg-hole" aria-hidden="true"></span>
+            <a class="peg-link" href={`/blog/${lead.id}`}>
+              <span class="peg-tags mono">
+                <span class="peg-tag peg-tag--desk">{verticalLabel(leadVertical)}</span>
+                <span class="peg-tag peg-tag--flag">Start here</span>
               </span>
-              <span class="recent-rt mono">{p.data.readingTime ?? readingTimeFor(p)}</span>
+              <h3 class="peg-title peg-title--lead">{lead.data.title}</h3>
+              <p class="peg-dek">{lead.data.description}</p>
+              <span class="peg-foot mono">
+                <time datetime={lead.data.pubDate.toISOString()}>{lead.data.pubDate.toISOString().slice(0, 10)}</time>
+                <span aria-hidden="true">·</span><span>{leadRt}</span>
+              </span>
             </a>
           </li>
-        ))}
+        )}
+        {boardPosts.map((p) => {
+          const vert = postVertical(p)
+          const rt = p.data.readingTime ?? readingTimeFor(p)
+          return (
+            <li class="peg-card" data-vertical={vert}>
+              <span class="peg-hole" aria-hidden="true"></span>
+              <a class="peg-link" href={`/blog/${p.id}`}>
+                <span class="peg-tags mono">
+                  <span class="peg-tag peg-tag--desk">{verticalLabel(vert)}</span>
+                  <span class="peg-tag">{p.data.category}</span>
+                </span>
+                <h3 class="peg-title">{p.data.title}</h3>
+                <p class="peg-dek">{p.data.description}</p>
+                <span class="peg-foot mono">
+                  <time datetime={p.data.pubDate.toISOString()}>{p.data.pubDate.toISOString().slice(0, 10)}</time>
+                  <span aria-hidden="true">·</span><span>{rt}</span>
+                </span>
+              </a>
+            </li>
+          )
+        })}
       </ul>
-      <p class="all-link">
-        <a href="/archive/">every project in the archive →</a>
-      </p>
+      <p class="all-link"><a href="/archive/">every project in the archive →</a></p>
     </section>
 
-    <hr class="tape-rule" />
-
-    {/* Stratum 3 — BY CATEGORY (materials list). */}
+    {/* ── HOOKS: rooms & tasks as hang-tags ───────────────────────────── */}
     {cats.length > 0 && (
-      <section class="stratum stratum-cats" aria-labelledby="s-cats">
-        <h2 id="s-cats" class="stratum-h mono">By room &amp; task</h2>
-        <p class="cats-row">
-          {cats.map((c, i) => (
-            <>
-              {i > 0 && <span class="cats-dot" aria-hidden="true">·</span>}
-              <a href={`/categories/${slugifyTag(c.category)}/`} class="cats-link" data-vertical={verticalFor(c.category)}>
-                <span class="cats-name">{c.category}</span>
-                <span class="cats-count mono">({c.count})</span>
+      <section class="rail" aria-labelledby="s-hooks">
+        <h2 id="s-hooks" class="rail-h mono"><span class="rail-tick" aria-hidden="true"></span>Hooks — rooms &amp; tasks</h2>
+        <ul class="hook-rail">
+          {cats.map((c) => (
+            <li>
+              <a class="hook-tag" href={`/categories/${slugifyTag(c.category)}/`} data-vertical={verticalFor(c.category)}>
+                <span class="hook-hole" aria-hidden="true"></span>
+                <span class="hook-name">{c.category}</span>
+                <span class="hook-count mono">{c.count}</span>
               </a>
-            </>
+            </li>
           ))}
-        </p>
+        </ul>
       </section>
     )}
   </div>
 </BaseLayout>
 
 <style>
-  .container-page {
-    max-width: 920px;
+  .board-wrap {
+    max-width: var(--container-page, 1100px);
     margin-inline: auto;
     padding-inline: clamp(1.25rem, 4vw, 2rem);
+    padding-bottom: 3rem;
   }
 
-  /* ── Masthead (front page) ─────────────────────────────────────────── */
-
-  .masthead {
-    padding-block: clamp(1.75rem, 5vw, 3rem) 1.5rem;
-  }
+  /* ── Masthead / blueprint hero ─────────────────────────────────────── */
+  .masthead { padding-block: clamp(1.75rem, 5vw, 3rem) 1.5rem; }
   .dateline {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--ink-mute);
-    padding-bottom: 0.875rem;
-    border-bottom: 2px dashed var(--rule-strong);
-    margin-bottom: 1.5rem;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-mute); padding-bottom: 0.875rem;
+    border-bottom: 2px dashed var(--rule-strong); margin-bottom: 1.5rem;
   }
   .dateline-vol { color: var(--blueprint); font-weight: 700; }
   .dateline-sep { color: var(--rule-strong, var(--rule)); }
   .dateline .count { color: var(--tape-ink); }
 
-  /* Blueprint frame — the hero drawn as a dimensioned project sheet. */
   .blueprint {
     position: relative;
     border: 2px solid var(--blueprint);
     border-radius: var(--radius-card);
-    padding: clamp(1.25rem, 4vw, 2.25rem);
+    padding: clamp(1.5rem, 4vw, 2.5rem);
     background:
-      linear-gradient(color-mix(in oklab, var(--paper) 82%, transparent), color-mix(in oklab, var(--paper) 82%, transparent));
+      linear-gradient(color-mix(in oklab, var(--paper) 84%, transparent), color-mix(in oklab, var(--paper) 84%, transparent)),
+      repeating-linear-gradient(0deg, var(--grid) 0 1px, transparent 1px 26px),
+      repeating-linear-gradient(90deg, var(--grid) 0 1px, transparent 1px 26px);
   }
-  /* corner registration ticks — draftsman's crop marks */
-  .blueprint::before,
-  .blueprint::after {
-    content: '';
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    border: 2px solid var(--tape);
-    pointer-events: none;
+  .bp-pin {
+    position: absolute; top: -8px; left: 22px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--tape); border: 2px solid var(--tape-ink);
+    box-shadow: 0 2px 3px color-mix(in oklab, var(--ink) 25%, transparent);
   }
-  .blueprint::before { top: -2px; left: -2px; border-right: 0; border-bottom: 0; }
-  .blueprint::after { bottom: -2px; right: -2px; border-left: 0; border-top: 0; }
-
+  .bp-pin--r { left: auto; right: 22px; }
   .nameplate {
     font-family: var(--font-display);
     font-size: clamp(2.1rem, 6.5vw, 3.75rem);
-    font-weight: 600;
-    font-variation-settings: "opsz" 144, "SOFT" 40;
-    letter-spacing: -0.02em;
-    line-height: 1.02;
-    color: var(--ink);
-    margin: 0;
-    max-width: 15ch;
+    font-weight: 600; font-variation-settings: "opsz" 144, "SOFT" 40;
+    letter-spacing: -0.02em; line-height: 1.02; color: var(--ink);
+    margin: 0; max-width: 15ch;
   }
   .nameplate-sub {
-    font-family: var(--font-body);
-    font-size: clamp(1rem, 2vw, 1.25rem);
-    line-height: 1.5;
-    color: var(--ink-mute);
-    margin: 1rem 0 0;
-    max-width: 52ch;
+    font-family: var(--font-body); font-size: clamp(1rem, 2vw, 1.25rem);
+    line-height: 1.5; color: var(--ink-mute); margin: 1rem 0 0; max-width: 52ch;
   }
   .spec-strip {
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem 1.5rem;
-    margin: 1.5rem 0 0;
-    padding: 0.875rem 0 0;
-    border-top: 1px solid var(--rule);
-    font-size: 12px;
+    list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem;
+    margin: 1.5rem 0 0; padding: 0.875rem 0 0;
+    border-top: 1px solid var(--rule); font-size: 12px;
   }
   .spec-strip li { display: inline-flex; align-items: baseline; gap: 0.5rem; }
-  .spec-k {
-    color: var(--tape-ink);
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    font-weight: 700;
-  }
+  .spec-k { color: var(--tape-ink); text-transform: uppercase; letter-spacing: 0.14em; font-weight: 700; }
   .spec-v { color: var(--ink); }
 
-  .masthead-spine {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.625rem;
-    margin: 1.5rem 0 0;
+  /* ── Section rails (shared heading) ────────────────────────────────── */
+  .rail { padding-block: 1.75rem 0.5rem; }
+  .rail-h {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.18em; color: var(--ink-mute); font-weight: 500; margin: 0 0 1.25rem;
   }
-  .masthead-spine-label {
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--ink-mute);
-  }
-  .masthead-spine-name {
-    font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--ink);
-    text-decoration: none;
-    border-bottom: 2px solid var(--tape);
-  }
-  .masthead-spine-name:hover { color: var(--blueprint); border-bottom-color: var(--blueprint); }
+  .rail-tick { width: 9px; height: 9px; background: var(--tape); border: 1.5px solid var(--tape-ink); border-radius: 50%; flex: 0 0 auto; }
 
-  /* ── Lead story ────────────────────────────────────────────────────── */
+  /* ── On the bench (job cards) ──────────────────────────────────────── */
+  .job-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+  .job-link {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 1rem;
+    align-items: baseline; color: var(--ink); text-decoration: none;
+    padding: 0.6rem 0.85rem; border: 1px dashed var(--rule-strong); border-radius: var(--radius-card);
+    background: var(--paper); transition: border-color var(--dur-fast) ease, color var(--dur-fast) ease;
+  }
+  .job-link:hover { border-color: var(--blueprint); border-style: solid; color: var(--blueprint); }
+  .job-link:hover .job-meta, .job-link:hover .job-ago { color: var(--blueprint); }
+  .job-name {
+    font-family: var(--font-display); font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em;
+    color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .job-meta, .job-ago { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--ink-mute); }
+  .job-spine { display: inline-flex; }
+  @media (max-width: 640px) {
+    .job-link {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas: 'name ago' 'meta meta' 'spine spine'; row-gap: 0.3rem;
+    }
+    .job-name { grid-area: name; } .job-meta { grid-area: meta; }
+    .job-spine { grid-area: spine; } .job-ago { grid-area: ago; text-align: right; }
+  }
 
-  .lead {
-    --v: var(--v-personal);
+  /* ── The board (pegboard grid) ─────────────────────────────────────── */
+  .board {
     padding-block: 1.75rem 0.5rem;
+    /* perforated board backing behind the whole grid */
+    --peg: color-mix(in oklab, var(--rule-strong) 45%, transparent);
   }
-  .lead[data-vertical='dev'] { --v: var(--v-dev); }
-  .lead[data-vertical='finance'] { --v: var(--v-finance); }
-  .lead[data-vertical='culture'] { --v: var(--v-culture); }
-  .lead[data-vertical='health'] { --v: var(--v-health); }
-  .lead-link { display: grid; gap: 0.625rem; color: var(--ink); text-decoration: none; }
-  .lead-kicker {
-    display: inline-flex; align-items: center; gap: 0.5rem;
-    font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-mute);
+  .pegboard {
+    list-style: none; margin: 0; padding: 1.25rem;
+    display: grid; grid-template-columns: 1fr; gap: 1.25rem;
+    background:
+      radial-gradient(circle at center, var(--peg) 1.3px, transparent 1.8px) 0 0 / 26px 26px;
+    border: 1px solid var(--rule); border-radius: var(--radius-card);
   }
-  .lead-tick { width: 8px; height: 8px; background: var(--v); flex: 0 0 auto; }
-  .lead-desk { color: var(--v); font-weight: 500; }
-  .lead-flag { border-left: 1px solid var(--rule); padding-left: 0.5rem; color: var(--accent); }
-  .lead-title {
-    font-family: var(--font-display);
-    font-size: clamp(1.875rem, 4.5vw, 2.75rem);
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    line-height: 1.08;
-    margin: 0;
-    max-width: 20ch;
-  }
-  .lead-link:hover .lead-title { color: var(--accent); }
-  .lead-dek {
-    font-family: var(--font-display);
-    font-size: 1.125rem;
-    line-height: 1.5;
-    color: var(--ink-mute);
-    margin: 0;
-    max-width: 58ch;
-  }
-  .lead-meta { display: inline-flex; gap: 0.5rem; font-size: 11px; letter-spacing: 0.06em; color: var(--ink-mute); }
+  @media (min-width: 620px) { .pegboard { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 980px) { .pegboard { grid-template-columns: repeat(3, 1fr); gap: 1.5rem; padding: 1.5rem; } }
 
-  /* ── Strata ────────────────────────────────────────────────────────── */
-
-  .stratum { padding-block: 1.75rem 1.75rem; }
-  .stratum-h {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: var(--ink-mute);
-    font-weight: 500;
-    margin: 0 0 1.25rem;
-  }
-
-  /* ── In progress ──────────────────────────────────────────────────── */
-
-  .progress-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.625rem;
-  }
-  .progress-row { padding: 0; }
-  .progress-link {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto auto;
-    gap: 1rem;
-    align-items: baseline;
-    color: var(--ink);
-    text-decoration: none;
-    padding-block: 0.5rem;
-  }
-  .progress-link:hover { color: var(--accent); }
-  .progress-link:hover .progress-meta,
-  .progress-link:hover .progress-ago { color: var(--accent); }
-  .progress-name {
-    font-family: var(--font-display);
-    font-size: 1.0625rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    color: var(--ink);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .progress-meta, .progress-ago {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    color: var(--ink-mute);
-  }
-  .progress-spine-mount { display: inline-flex; }
-
-  @media (max-width: 640px) {
-    .progress-link {
-      grid-template-columns: minmax(0, 1fr) auto;
-      grid-template-areas:
-        'name      ago'
-        'meta      meta'
-        'spine     spine';
-      row-gap: 0.25rem;
-    }
-    .progress-name { grid-area: name; }
-    .progress-meta { grid-area: meta; }
-    .progress-spine-mount { grid-area: spine; }
-    .progress-ago { grid-area: ago; text-align: right; }
-  }
-
-  /* ── Recent ───────────────────────────────────────────────────────── */
-
-  .recent-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-  }
-  .recent-row {
-    --v: var(--v-personal);
-    border-bottom: 1px solid color-mix(in oklab, var(--rule) 70%, transparent);
-  }
-  .recent-row[data-vertical='dev'] { --v: var(--v-dev); }
-  .recent-row[data-vertical='finance'] { --v: var(--v-finance); }
-  .recent-row[data-vertical='culture'] { --v: var(--v-culture); }
-  .recent-row[data-vertical='health'] { --v: var(--v-health); }
-  .recent-row:last-child { border-bottom: 0; }
-  .recent-link {
-    display: grid;
-    grid-template-columns: 100px minmax(0, 1fr) auto;
-    gap: 1.25rem;
-    align-items: baseline;
-    color: var(--ink);
-    text-decoration: none;
-    padding-block: 0.875rem;
-    padding-left: 0.75rem;
-    margin-left: -0.75rem;
-    border-left: 2px solid transparent;
-    transition: border-color var(--dur-fast, 120ms) ease;
-  }
-  .recent-link:hover { border-left-color: var(--v); }
-  .recent-link:hover .recent-title { color: var(--accent); }
-  .recent-link:hover .recent-date,
-  .recent-link:hover .recent-rt { color: var(--accent); }
-
-  .recent-kicker {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--v);
-    font-weight: 500;
-  }
-  .recent-tick { width: 6px; height: 6px; background: var(--v); flex: 0 0 auto; }
-
-  .recent-date {
-    color: var(--ink-mute);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: 0.04em;
+  .peg-card {
     position: relative;
-    padding-left: 0.875rem;
+    --v: var(--v-personal);
+    background: var(--paper);
+    border: 1.5px solid var(--rule-strong);
+    border-top: 3px solid var(--v);
+    border-radius: var(--radius-card);
+    box-shadow: 2px 3px 0 color-mix(in oklab, var(--ink) 8%, transparent);
+    transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) ease;
   }
-  /* dateline gutter: coral tick marks the wire-feed timestamp */
-  .recent-date::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.12em;
-    width: 3px;
-    height: 0.7em;
-    background: var(--cobalt);
+  .peg-card[data-vertical='dev'] { --v: var(--v-dev); }
+  .peg-card[data-vertical='finance'] { --v: var(--v-finance); }
+  .peg-card[data-vertical='culture'] { --v: var(--v-culture); }
+  .peg-card[data-vertical='health'] { --v: var(--v-health); }
+  /* the peg hole + hook the card hangs from */
+  .peg-hole {
+    position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--paper-2); border: 2px solid var(--rule-strong); z-index: 1;
   }
-  .recent-meat {
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
-    min-width: 0;
+  .peg-hole::after {
+    content: ''; position: absolute; left: 50%; top: -6px; transform: translateX(-50%);
+    width: 3px; height: 8px; background: var(--tape-ink); border-radius: 2px;
   }
-  .recent-title {
-    font-family: var(--font-display);
-    font-size: 1.125rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    color: var(--ink);
-    line-height: 1.3;
-  }
-  .recent-dek {
-    font-family: var(--font-body);
-    font-size: 14.5px;
-    color: var(--ink-mute);
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    overflow: hidden;
-  }
-  .recent-rt {
-    color: var(--ink-mute);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-  }
+  .peg-card:hover { transform: translateY(-3px) rotate(-0.5deg); box-shadow: 3px 6px 0 color-mix(in oklab, var(--ink) 12%, transparent); }
 
-  @media (max-width: 640px) {
-    .recent-link {
-      grid-template-columns: minmax(0, 1fr) auto;
-      grid-template-areas:
-        'date   rt'
-        'meat   meat';
-      row-gap: 0.25rem;
-    }
-    .recent-date { grid-area: date; }
-    .recent-rt { grid-area: rt; text-align: right; }
-    .recent-meat { grid-area: meat; }
+  .peg-card--lead {
+    border-top-color: var(--tape);
+    box-shadow: 3px 4px 0 color-mix(in oklab, var(--tape) 30%, transparent);
   }
+  @media (min-width: 620px) { .peg-card--lead { grid-column: 1 / -1; } }
 
-  .all-link {
-    margin: 1.25rem 0 0;
-    font-family: var(--font-sans);
-    font-size: 13.6px;
+  .peg-link { display: grid; gap: 0.55rem; padding: 1.1rem 1.1rem 1.2rem; color: var(--ink); text-decoration: none; }
+  .peg-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .peg-tag {
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-mute); background: var(--paper-2);
+    border: 1px solid var(--rule); border-radius: 2px 7px 7px 2px;
+    padding: 0.15rem 0.5rem 0.15rem 0.45rem;
   }
+  .peg-tag--desk { color: var(--v); border-color: color-mix(in oklab, var(--v) 45%, var(--rule)); font-weight: 600; }
+  .peg-tag--flag { color: #241c00; background: var(--tape); border-color: var(--tape-ink); font-weight: 700; }
+  .peg-title {
+    font-family: var(--font-display); font-size: 1.2rem; font-weight: 600;
+    letter-spacing: -0.015em; line-height: 1.22; margin: 0; color: var(--ink);
+  }
+  .peg-title--lead { font-size: clamp(1.6rem, 3.4vw, 2.35rem); line-height: 1.1; max-width: 20ch; }
+  .peg-link:hover .peg-title { color: var(--accent); }
+  .peg-dek {
+    font-family: var(--font-body); font-size: 0.9rem; line-height: 1.5; color: var(--ink-mute); margin: 0;
+    display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .peg-card--lead .peg-dek { font-size: 1.05rem; -webkit-line-clamp: 2; line-clamp: 2; max-width: 58ch; }
+  .peg-foot { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 11px; letter-spacing: 0.04em; color: var(--ink-mute); }
+
+  .all-link { margin: 1.5rem 0 0; font-family: var(--font-sans); font-size: 13.6px; }
   .all-link a {
-    color: var(--ink-mute);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    text-decoration-color: var(--rule);
+    color: var(--ink-mute); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--rule);
   }
   .all-link a:hover { color: var(--accent); text-decoration-color: var(--accent); }
 
-  /* ── By category (one row) ────────────────────────────────────────── */
-
-  .cats-row {
-    margin: 0;
-    line-height: 2;
-    color: var(--ink);
-  }
-  .cats-link {
+  /* ── Hooks (hang-tags) ─────────────────────────────────────────────── */
+  .hook-rail { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.6rem; }
+  .hook-tag {
     --v: var(--v-personal);
-    color: var(--ink);
-    text-decoration: none;
-    margin-inline: 0.125rem;
+    position: relative; display: inline-flex; align-items: center; gap: 0.45rem;
+    padding: 0.4rem 0.7rem 0.4rem 0.85rem; text-decoration: none; color: var(--ink);
+    background: var(--paper); border: 1.5px solid var(--rule-strong);
+    border-radius: 2px 10px 10px 2px;
+    transition: transform var(--dur-fast) var(--ease-out), border-color var(--dur-fast) ease, color var(--dur-fast) ease;
   }
-  .cats-link[data-vertical='dev'] { --v: var(--v-dev); }
-  .cats-link[data-vertical='finance'] { --v: var(--v-finance); }
-  .cats-link[data-vertical='culture'] { --v: var(--v-culture); }
-  .cats-link[data-vertical='health'] { --v: var(--v-health); }
-  .cats-link:hover .cats-name { color: var(--v); }
-  .cats-name {
-    font-family: var(--font-display);
-    font-size: 17px;
-    font-weight: 500;
-    letter-spacing: -0.01em;
+  .hook-tag[data-vertical='dev'] { --v: var(--v-dev); }
+  .hook-tag[data-vertical='finance'] { --v: var(--v-finance); }
+  .hook-tag[data-vertical='culture'] { --v: var(--v-culture); }
+  .hook-tag[data-vertical='health'] { --v: var(--v-health); }
+  .hook-hole { width: 8px; height: 8px; border-radius: 50%; background: var(--paper-2); border: 1.5px solid var(--rule-strong); flex: 0 0 auto; }
+  .hook-name { font-family: var(--font-display); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .hook-count { font-size: 10px; color: var(--ink-mute); }
+  .hook-tag:hover { transform: rotate(-2deg) translateY(1px); border-color: var(--v); color: var(--v); }
+  .hook-tag:hover .hook-hole { border-color: var(--v); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .peg-card, .hook-tag { transition: none; }
+    .peg-card:hover, .hook-tag:hover { transform: none; }
   }
-  .cats-count {
-    color: var(--ink-mute);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    margin-left: 0.25rem;
-  }
-  .cats-dot { color: var(--rule); margin-inline: 0.625rem; }
 </style>

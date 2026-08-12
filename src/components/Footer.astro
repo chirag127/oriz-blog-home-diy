@@ -25,40 +25,34 @@ const categories = [
 const tags = (await getTagsWithCounts()).slice(0, 8).map(({ tag }) => tag)
 ---
 <footer class="blog-footer" role="contentinfo">
+  <span class="bf-perf" aria-hidden="true"></span>
   <div class="bf-quote">
     <blockquote>
       <span aria-hidden="true" class="bf-q-mark">“</span>
       Measure twice. Write it down once.
     </blockquote>
-    <p class="bf-quote-attr">— home&diy · oriz</p>
+    <p class="bf-quote-attr">— home&diy · the workbench</p>
   </div>
   <div class="bf-grid">
     <div class="bf-col">
-      <h3 class="bf-h">Categories</h3>
-      <ul>
+      <h3 class="bf-h"><span class="bf-hook" aria-hidden="true"></span>Rooms</h3>
+      <ul class="bf-tags">
         {categories.map((c) => <li><a href={c.slug ? `/categories/${c.slug}/` : '/categories/'}>{c.name}</a></li>)}
       </ul>
     </div>
     <div class="bf-col">
-      <h3 class="bf-h">Recent</h3>
-      <ul>
-        <li><a href="/blog/">Latest posts</a></li>
+      <h3 class="bf-h"><span class="bf-hook" aria-hidden="true"></span>The bench</h3>
+      <ul class="bf-tags">
+        <li><a href="/blog/">Latest</a></li>
         <li><a href="/archive/">Archive</a></li>
-        <li><a href="/archive/">All posts</a></li>
+        <li><a href="/series/">Guides</a></li>
         <li><a href="/now/">Now</a></li>
       </ul>
     </div>
     <div class="bf-col">
-      <h3 class="bf-h">Tags</h3>
+      <h3 class="bf-h"><span class="bf-hook" aria-hidden="true"></span>Tools &amp; tags</h3>
       <ul class="bf-tags">
         {tags.map((t) => <li><a href={`/tags/${slugifyTag(t)}/`}>#{t}</a></li>)}
-      </ul>
-    </div>
-    <div class="bf-col">
-      <h3 class="bf-h">Series</h3>
-      <ul>
-        <li><a href="/series/">Browse series</a></li>
-        <li><a href="/blog/">Latest threads</a></li>
       </ul>
     </div>
   </div>
@@ -71,46 +65,63 @@ const tags = (await getTagsWithCounts()).slice(0, 8).map(({ tag }) => tag)
 </footer>
 <style>
   .blog-footer {
+    position: relative;
     margin-top: 5rem;
-    background: var(--color-paper-2, var(--paper-2, transparent));
+    background:
+      radial-gradient(circle at center, color-mix(in oklab, var(--rule-strong) 40%, transparent) 1.2px, transparent 1.7px) 0 0 / 24px 24px,
+      var(--color-paper-2, var(--paper-2, transparent));
     color: var(--color-ink, var(--ink));
-    border-top: 1px solid var(--color-rule, var(--rule));
+    border-top: 2px solid var(--blueprint);
+  }
+  /* torn perforation strip along the top edge */
+  .bf-perf {
+    position: absolute; left: 0; right: 0; top: -1px; height: 5px;
+    background: radial-gradient(circle at center, var(--tape) 1px, transparent 1.4px) 0 center / 14px 5px repeat-x;
+    opacity: 0.6;
   }
   .bf-quote {
-    max-width: 1200px; margin: 0 auto;
+    max-width: var(--container-page, 1100px); margin: 0 auto;
     padding: 48px 16px 24px;
     text-align: left;
   }
   .bf-quote blockquote {
     margin: 0;
-    font-family: var(--font-display, 'Source Serif 4', Georgia, serif);
+    font-family: var(--font-display, 'Fraunces', Georgia, serif);
     font-style: normal; font-weight: 600; font-size: clamp(22px, 3.2vw, 30px);
     line-height: 1.3; letter-spacing: -0.015em;
     color: var(--color-ink, var(--ink)); max-width: 560px;
   }
-  .bf-q-mark { font-size: 1.5em; line-height: 0; color: var(--color-accent, var(--cobalt, #e63a1f)); margin-right: 4px; }
+  .bf-q-mark { font-size: 1.5em; line-height: 0; color: var(--tape, #f2b705); margin-right: 4px; }
   .bf-quote-attr {
     margin: 16px 0 0; font-family: var(--font-mono, ui-monospace);
     font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em;
     color: var(--color-ink-mute, var(--ink-mute));
   }
   .bf-grid {
-    max-width: 1200px; margin: 0 auto;
+    max-width: var(--container-page, 1100px); margin: 0 auto;
     display: grid; grid-template-columns: 1fr; gap: 24px;
     padding: 12px 16px 24px;
   }
   .bf-h {
+    display: flex; align-items: center; gap: 8px;
     margin: 0 0 14px;
     font-family: var(--font-mono, ui-monospace);
     font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em;
     color: var(--color-ink-mute, var(--ink-mute)); font-weight: 500;
   }
-  .bf-col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
-  .bf-col a { color: var(--color-ink, var(--ink)); font-size: 14px; text-decoration: none; }
-  .bf-col a:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
-  .bf-tags { flex-direction: row; flex-wrap: wrap; gap: 8px 12px; }
-  .bf-tags a { font-family: var(--font-mono, ui-monospace); font-size: 13px; color: var(--color-ink-mute, var(--ink-mute)); }
-  .bf-tags a:hover { color: var(--color-accent, var(--cobalt, #e63a1f)); text-decoration: none; }
-  @media (min-width: 768px) { .bf-grid { grid-template-columns: 1fr 1fr; gap: 32px; padding: 16px 24px 28px; } .bf-quote { padding: 64px 24px 20px; } }
-  @media (min-width: 1024px) { .bf-grid { grid-template-columns: repeat(4, 1fr); padding: 16px 24px 32px; } }
+  .bf-hook { width: 8px; height: 8px; border-radius: 50%; background: var(--tape); border: 1.5px solid var(--tape-ink); flex: 0 0 auto; }
+  /* every footer link is a small hang-tag */
+  .bf-tags { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .bf-tags a {
+    display: inline-flex; align-items: center;
+    font-family: var(--font-mono, ui-monospace); font-size: 12px;
+    color: var(--color-ink, var(--ink)); text-decoration: none;
+    padding: 3px 9px 3px 11px;
+    background: var(--paper); border: 1.5px solid var(--rule-strong, var(--rule));
+    border-radius: 2px 8px 8px 2px;
+    transition: border-color 120ms ease, color 120ms ease;
+  }
+  .bf-tags a:hover { color: var(--blueprint); border-color: var(--blueprint); text-decoration: none; }
+  @media (min-width: 768px) { .bf-grid { grid-template-columns: 1fr 1fr 1fr; gap: 32px; padding: 16px 24px 28px; } .bf-quote { padding: 64px 24px 20px; } }
+  @media (min-width: 1024px) { .bf-grid { grid-template-columns: repeat(3, 1fr); padding: 16px 24px 32px; } }
 </style>

@@ -2,113 +2,189 @@
 import HeaderControls from '~/components/HeaderControls.tsx'
 import MultiSearch from '~/components/MultiSearch.tsx'
 import StatusBanner from '~/components/StatusBanner.astro'
-/*
- * Header — editorial masthead bar ("Signal Press").
- *
- *   ┌─────────────────────────────────────────────────────────────────┐
- *   │  oriz/blog        LATEST · SERIES · TAGS · ABOUT    ⌘K rss ··· │
- *   └─────────────────────────────────────────────────────────────────┘
- *
- * Left: serif wordmark. Center: mono uppercase nav with orange underline.
- * Right: search (⌘K), rss, ··· overflow. 64px, sticky, paper blur.
- */
 import Wordmark from '~/components/Wordmark.astro'
+/*
+ * Header — "The Workbench" shop sign (PEGBOARD archetype).
+ *
+ * NOT a centered top-nav magazine bar. A workshop-sign plank: the wordmark
+ * routed into a hanging sign on the left, and the nav rendered as physical
+ * tool-tags hung on a peg rail on the right — each label a punched chip with
+ * a peg hole, not an underline link. Search + controls sit on the far end as
+ * the shop's key hooks. The whole plank reads like the sign over a workbench.
+ *
+ *   ┌───────────────────────────────────────────────────────────────────┐
+ *   │  ╔═══════════╗   [Bench] [Guides] [Rooms] [About]   ⌘K  ☰ · ○      │
+ *   │  ║ oriz/h&d  ║        ·tool tags on a peg rail·                     │
+ *   └───────────────────────────────────────────────────────────────────┘
+ */
+const path = Astro.url.pathname
+const isHome = path === '/'
+const isSeries = path.startsWith('/series')
+const isRooms = path.startsWith('/categories')
+const isAbout = path.startsWith('/about')
 ---
 
 <StatusBanner />
-<header class="site-header" transition:persist="site-header">
-  <div class="container-page header-inner">
-    <div class="brand">
-      <Wordmark subtitle="home&diy" size={21} href="/" />
-    </div>
-    <nav class="header-nav" aria-label="Primary">
-      <a href="/" aria-current={Astro.url.pathname === '/' ? 'page' : undefined}>Latest</a>
-      <a href="/series/" aria-current={Astro.url.pathname.startsWith('/series') ? 'page' : undefined}>Guides</a>
-      <a href="/categories/" aria-current={Astro.url.pathname.startsWith('/categories') ? 'page' : undefined}>Rooms</a>
-      <a href="/about/" aria-current={Astro.url.pathname.startsWith('/about') ? 'page' : undefined}>About</a>
+<header class="shop-sign" transition:persist="site-header">
+  <div class="shop-inner">
+    <a class="sign-plank" href="/" aria-label="The Workbench — home">
+      <span class="sign-hook" aria-hidden="true"></span>
+      <span class="sign-hook sign-hook--r" aria-hidden="true"></span>
+      <Wordmark subtitle="home&diy" size={20} href={null} />
+      <span class="sign-strap mono">The Workbench</span>
+    </a>
+
+    <nav class="peg-rail" aria-label="Primary">
+      <a class="tool-tag" href="/" aria-current={isHome ? 'page' : undefined}>
+        <span class="tag-hole" aria-hidden="true"></span>Bench
+      </a>
+      <a class="tool-tag" href="/series/" aria-current={isSeries ? 'page' : undefined}>
+        <span class="tag-hole" aria-hidden="true"></span>Guides
+      </a>
+      <a class="tool-tag" href="/categories/" aria-current={isRooms ? 'page' : undefined}>
+        <span class="tag-hole" aria-hidden="true"></span>Rooms
+      </a>
+      <a class="tool-tag" href="/about/" aria-current={isAbout ? 'page' : undefined}>
+        <span class="tag-hole" aria-hidden="true"></span>About
+      </a>
     </nav>
-    <div class="header-multisearch">
-      <MultiSearch client:idle />
-    </div>
-    <div class="header-controls-mount">
-      <HeaderControls client:idle />
+
+    <div class="shop-keys">
+      <div class="shop-search"><MultiSearch client:idle /></div>
+      <div class="shop-controls"><HeaderControls client:idle /></div>
     </div>
   </div>
+  <span class="sign-perf" aria-hidden="true"></span>
 </header>
 
 <style>
-  .site-header {
+  .shop-sign {
     position: sticky;
     top: 0;
     z-index: 50;
-    background: color-mix(in oklab, var(--paper) 90%, transparent);
-    backdrop-filter: saturate(180%) blur(10px);
-    -webkit-backdrop-filter: saturate(180%) blur(10px);
-    border-bottom: 1px solid var(--rule);
+    background:
+      /* pegboard perforation — faint dot grid on the plank */
+      radial-gradient(circle at center, color-mix(in oklab, var(--rule-strong) 55%, transparent) 1.1px, transparent 1.6px) 0 0 / 22px 22px,
+      color-mix(in oklab, var(--paper-2) 94%, transparent);
+    backdrop-filter: saturate(140%) blur(8px);
+    -webkit-backdrop-filter: saturate(140%) blur(8px);
+    border-bottom: 2px solid var(--blueprint);
   }
-  .header-inner {
-    height: 64px;
+  .shop-inner {
+    max-width: var(--container-page, 1100px);
+    margin-inline: auto;
+    min-height: 68px;
+    padding: 0.5rem clamp(1rem, 4vw, 2rem);
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1rem 1.25rem;
+    flex-wrap: wrap;
   }
-  .brand {
+
+  /* ── the hanging shop sign (wordmark plank) ─────────────────────────── */
+  .sign-plank {
+    position: relative;
     flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
-  }
-  .header-nav {
-    display: none;
-    gap: 1.5rem;
-    font-family: var(--font-utility, var(--font-mono));
-    font-size: 12px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--color-muted);
-  }
-  .header-nav a {
-    position: relative;
-    padding-block: 0.375rem;
-    color: var(--color-muted);
+    gap: 0.6rem;
+    padding: 0.4rem 0.85rem;
     text-decoration: none;
-    transition: color var(--dur-fast, 120ms) ease;
+    color: var(--ink);
+    background: var(--paper);
+    border: 2px solid var(--blueprint);
+    border-radius: var(--radius-card);
+    box-shadow: 3px 3px 0 color-mix(in oklab, var(--blueprint) 22%, transparent);
   }
-  .header-nav a:hover {
-    color: var(--color-accent);
-  }
-  .header-nav a::after {
-    content: '';
+  /* two screw-heads pinning the plank to the board */
+  .sign-hook {
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 3px;
+    top: -7px;
+    left: 12px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
     background: var(--tape);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform var(--dur-fast, 120ms) ease;
+    border: 1.5px solid var(--tape-ink);
   }
-  .header-nav a:hover::after,
-  .header-nav a[aria-current='page']::after {
-    transform: scaleX(1);
+  .sign-hook--r { left: auto; right: 12px; }
+  .sign-strap {
+    font-size: 9.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--blueprint);
+    border-left: 1px solid var(--rule);
+    padding-left: 0.6rem;
   }
-  .header-nav a[aria-current='page'] {
-    color: var(--color-accent);
+
+  /* ── peg rail of tool tags ──────────────────────────────────────────── */
+  .peg-rail {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding-left: 0.25rem;
   }
-  @media (min-width: 768px) {
-    .header-nav { display: inline-flex; align-items: center; }
+  .tool-tag {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem 0.3rem 0.85rem;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    text-decoration: none;
+    background: var(--paper);
+    border: 1.5px solid var(--rule-strong);
+    border-radius: 2px 9px 9px 2px; /* punched-tag shape */
+    transition: transform var(--dur-fast) var(--ease-out), border-color var(--dur-fast) ease, color var(--dur-fast) ease;
   }
-  .header-controls-mount {
+  .tag-hole {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--paper-2);
+    border: 1.5px solid var(--rule-strong);
+    flex: 0 0 auto;
+  }
+  .tool-tag:hover {
+    transform: rotate(-2.5deg) translateY(1px);
+    border-color: var(--blueprint);
+    color: var(--blueprint);
+  }
+  .tool-tag[aria-current='page'] {
+    background: var(--tape);
+    border-color: var(--tape-ink);
+    color: #241c00;
+  }
+  .tool-tag[aria-current='page'] .tag-hole {
+    background: var(--paper);
+    border-color: var(--tape-ink);
+  }
+  @media (min-width: 860px) {
+    .peg-rail { display: inline-flex; }
+  }
+
+  .shop-keys {
     margin-left: auto;
     display: inline-flex;
     align-items: center;
+    gap: 0.75rem;
   }
-  .header-multisearch {
-    margin-left: auto;
-    display: inline-flex;
-    align-items: center;
+  .shop-search, .shop-controls { display: inline-flex; align-items: center; }
+
+  /* perforation strip pinned to the bottom edge of the sign */
+  .sign-perf {
+    display: block;
+    height: 5px;
+    background:
+      radial-gradient(circle at center, var(--rule-strong) 1px, transparent 1.4px) 0 center / 14px 5px repeat-x;
+    opacity: 0.5;
   }
-  .header-multisearch + .header-controls-mount {
-    margin-left: 0.75rem;
+
+  @media (prefers-reduced-motion: reduce) {
+    .tool-tag { transition: none; }
+    .tool-tag:hover { transform: none; }
   }
 </style>

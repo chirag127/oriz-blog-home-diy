@@ -141,18 +141,22 @@
   padding-inline: clamp(1rem, 4vw, 1.25rem);
 }
 
-/* ── Editorial post list (shared by every listing) ──────────────────────
-   PostCard renders as a hairline-ruled row; the list only supplies the
-   closing rule + max column measure. Replaces the old rounded-card grid. */
+/* ── Pegboard post grid (shared by every listing) ───────────────────────
+   PostCard renders as a hung tile with a peg-hole; the list is a perforated
+   pegboard the tiles pin to. Replaces the old hairline dispatch ledger. */
 .post-list {
   list-style: none;
   margin: 0;
-  padding: 0;
-  max-width: 820px;
+  padding: 1.25rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  background: radial-gradient(circle at center, color-mix(in oklab, var(--rule-strong) 45%, transparent) 1.3px, transparent 1.8px) 0 0 / 26px 26px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
 }
-.post-list > li:last-child .post-card {
-  border-bottom: 1px solid var(--rule);
-}
+@media (min-width: 620px) { .post-list { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 980px) { .post-list { grid-template-columns: repeat(3, 1fr); gap: 1.5rem; padding: 1.5rem; } }
 
 /* ── Skip link ────────────────────────────────────────────────────────── */
 
