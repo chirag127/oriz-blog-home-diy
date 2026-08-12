@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <title>The Workbench — Home &amp; DIY</title>
+  <rect width="192" height="192" rx="24" fill="#21525b"/>
+  <g fill="#f2b705">
+    <rect x="24" y="36" width="144" height="16"/>
+    <rect x="36" y="52" width="8" height="12"/>
+    <rect x="66" y="52" width="8" height="18"/>
+    <rect x="96" y="52" width="8" height="12"/>
+    <rect x="126" y="52" width="8" height="18"/>
+    <rect x="156" y="52" width="8" height="12"/>
+  </g>
+  <text x="96" y="156" font-family="Georgia, serif" font-size="90" font-weight="700" fill="#f5f3ec" text-anchor="middle">W</text>
+</svg>

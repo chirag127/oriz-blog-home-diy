@@ -1,0 +1,257 @@
+/*
+ * tokens.css — "The Workbench" identity (Home & DIY, 2026-08-12).
+ *
+ * Grounded in the workshop's own world: warm plaster walls, spruce-green
+ * ink, measuring-tape yellow, and blueprint teal. Deliberately UNLIKE the
+ * three AI-default looks and unlike the base "Signal Press" dark/amber theme.
+ *
+ *   --paper    warm plaster (greener than cream, not #F4F1EA)
+ *   --ink      deep spruce-green (not black)
+ *   --tape     measuring-tape yellow  — PRIMARY signal accent
+ *   --blueprint deep teal-slate       — structural accent
+ *
+ * Every --color-* / --brand / --accent name is kept as an alias so chrome /
+ * legal / Footer components compile unchanged. Theme modes:
+ *   :root                              → light workshop daylight (default)
+ *   @media (prefers-color-scheme:dark) → night-shift workshop
+ *   [data-theme="dark"]                → night-shift, always
+ *   [data-theme="sepia"]               → warm workbench top
+ *   [data-theme="hc"]                  → pure black/white high contrast
+ */
+:root {
+  color-scheme: light;
+
+  /* ── workshop-daylight palette ─────────────────────────────────────── */
+  --tape: #f2b705;        /* measuring-tape yellow — primary signal */
+  --tape-ink: #b08300;    /* tick marks / tape edge shadow */
+  --blueprint: #21525b;   /* deep teal-slate — structural accent */
+  --brand: var(--blueprint);
+  --brand-soft: #dfe8e6;  /* teal tint — hover, chips */
+  --success: #3d7a4e;
+  --danger-color: #c0432b;
+
+  --paper: #f5f3ec;       /* warm plaster wall (page bg) */
+  --paper-2: #ecebe0;     /* elevated panel / cabinet face */
+  --surface: var(--paper-2);
+  --grid: #e2ddcc;        /* faint graph-paper grid line */
+  --ink: #1c2b2d;         /* deep spruce-green text */
+  --ink-mute: #5f6d63;    /* secondary — sage-grey */
+  --rule: #d8d2c2;        /* hairline */
+  --rule-strong: #b9b3a1; /* heavier rule */
+
+  /* canonical accent — links + interactive route through --accent (blueprint
+     teal for legibility on plaster); --tape reserved for signal moments. */
+  --accent: var(--blueprint);
+  --accent-soft: var(--brand-soft);
+  --cobalt: var(--tape);          /* back-compat alias → signal yellow */
+  --brand-tint: var(--brand-soft);
+  --sage: var(--success);
+  --vermilion: var(--danger-color);
+  --highlighter: var(--tape);
+
+  /* content-desk marker colours — tools/rooms of the house.
+     Organize · Repair · Refresh · Outdoor · Notes. */
+  --v-dev: #21525b;       /* Organize — blueprint teal */
+  --v-finance: #b06a12;   /* Repair — rust/oxide */
+  --v-culture: #7a5ca0;   /* Refresh — dusty violet */
+  --v-health: #3d7a4e;    /* Outdoor — leaf green */
+  --v-personal: #5f6d63;  /* Notes — sage-grey */
+
+  /* semantic passthroughs */
+  --color-bg: var(--paper);
+  --color-fg: var(--ink);
+  --color-accent: var(--accent);
+  --color-accent-fg: #f5f3ec;
+  --color-sage: var(--success);
+  --color-muted: var(--ink-mute);
+  --color-border: var(--rule);
+  --color-bg-soft: var(--paper-2);
+  --color-bg-muted: var(--paper-2);
+  --color-prose: var(--ink);
+  --color-fg-muted: var(--ink-mute);
+  --color-fg-soft: var(--ink-mute);
+
+  /* color alias layer (chrome components read these) */
+  --color-brand-indigo: var(--accent);
+  --color-brand-indigo-soft: var(--brand-soft);
+  --color-brand-success: var(--success);
+  --color-brand-danger: var(--danger-color);
+  --color-neutral-0: #f5f3ec;
+  --color-neutral-50: #ecebe0;
+  --color-neutral-100: #e2ddcc;
+  --color-neutral-200: #d8d2c2;
+  --color-neutral-300: #b9b3a1;
+  --color-neutral-500: #5f6d63;
+  --color-neutral-700: #384039;
+  --color-neutral-900: #1c2b2d;
+  --color-neutral-1000: #0e1615;
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-ink: var(--ink);
+  --color-ink-mute: var(--ink-mute);
+  --color-rule: var(--rule);
+
+  /* ── type scale ─────────────────────────────────────────────────────── */
+  --text-2xs: 10px;
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-md: 17px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+  --text-3xl: 48px;
+
+  /* spacing — 8 steps */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* motion — restrained */
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 360ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* breakpoints */
+  --bp-sm: 480px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1440px;
+
+  /* radii + containers — soft, hand-worked corners (2px, not zero/pill) */
+  --radius-card: 3px;
+  --radius-button: 3px;
+  --container-page: 1100px;
+}
+
+/* ── DARK — night-shift workshop, system preference unless forced light ── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --tape: #ffc832;
+    --tape-ink: #8a6600;
+    --blueprint: #6fd0dd;
+    --brand: var(--blueprint);
+    --brand-soft: #14282c;
+    --success: #5cc47a;
+    --danger-color: #f0876e;
+    --paper: #14201f;        /* dark spruce workshop */
+    --paper-2: #1c2c2a;
+    --grid: #223432;
+    --ink: #eef0e6;
+    --ink-mute: #93a49a;
+    --rule: #2a3b38;
+    --rule-strong: #3a4d49;
+    --accent: var(--blueprint);
+    --cobalt: var(--tape);
+    --v-dev: #6fd0dd;
+    --v-finance: #e0a24a;
+    --v-culture: #b79ad6;
+    --v-health: #5cc47a;
+    --v-personal: #93a49a;
+    --color-accent-fg: #14201f;
+    --color-neutral-0: #14201f;
+    --color-neutral-50: #1c2c2a;
+    --color-neutral-100: #223432;
+    --color-neutral-200: #2a3b38;
+    --color-neutral-300: #3a4d49;
+    --color-neutral-500: #93a49a;
+    --color-neutral-700: #c3cdc4;
+    --color-neutral-900: #eef0e6;
+  }
+}
+
+/* ── DARK — explicit user override, wins over system ────────────────── */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --tape: #ffc832;
+  --tape-ink: #8a6600;
+  --blueprint: #6fd0dd;
+  --brand: var(--blueprint);
+  --brand-soft: #14282c;
+  --success: #5cc47a;
+  --danger-color: #f0876e;
+  --paper: #14201f;
+  --paper-2: #1c2c2a;
+  --grid: #223432;
+  --ink: #eef0e6;
+  --ink-mute: #93a49a;
+  --rule: #2a3b38;
+  --rule-strong: #3a4d49;
+  --accent: var(--blueprint);
+  --cobalt: var(--tape);
+  --v-dev: #6fd0dd;
+  --v-finance: #e0a24a;
+  --v-culture: #b79ad6;
+  --v-health: #5cc47a;
+  --v-personal: #93a49a;
+  --color-accent-fg: #14201f;
+  --color-neutral-0: #14201f;
+  --color-neutral-50: #1c2c2a;
+  --color-neutral-100: #223432;
+  --color-neutral-200: #2a3b38;
+  --color-neutral-300: #3a4d49;
+  --color-neutral-500: #93a49a;
+  --color-neutral-700: #c3cdc4;
+  --color-neutral-900: #eef0e6;
+}
+
+/* ── SEPIA — warm workbench top ─────────────────────────────────────── */
+:root[data-theme='sepia'] {
+  color-scheme: light;
+  --tape: #d98a00;
+  --tape-ink: #9c6200;
+  --blueprint: #2f5d62;
+  --brand: var(--blueprint);
+  --brand-soft: #ecd9bf;
+  --paper: #efe0c6;
+  --paper-2: #e6d4b6;
+  --grid: #ddc9a6;
+  --ink: #3a2e1c;
+  --ink-mute: #7a664a;
+  --rule: #d3bd97;
+  --accent: var(--blueprint);
+  --cobalt: var(--tape);
+  --color-accent-fg: #efe0c6;
+  --color-fg-soft: color-mix(in oklab, var(--ink) 55%, var(--paper));
+  --color-neutral-50: #e6d4b6;
+  --color-neutral-100: #ddc9a6;
+  --color-neutral-200: #d3bd97;
+  --color-neutral-500: #7a664a;
+  --color-neutral-700: #574632;
+  --color-neutral-900: #3a2e1c;
+}
+
+/* ── HIGH-CONTRAST — pure black/white, hard borders ─────────────────── */
+:root[data-theme='hc'] {
+  color-scheme: light;
+  --tape: #b36b00;
+  --tape-ink: #000000;
+  --blueprint: #0b3f47;
+  --brand: var(--blueprint);
+  --brand-soft: #d7e8ea;
+  --paper: #ffffff;
+  --paper-2: #ffffff;
+  --grid: #e6e6e6;
+  --ink: #000000;
+  --ink-mute: #2a2a35;
+  --rule: #000000;
+  --accent: var(--blueprint);
+  --cobalt: var(--tape);
+  --color-accent-fg: #ffffff;
+  --color-fg-soft: #2a2a35;
+  --color-neutral-50: #ffffff;
+  --color-neutral-100: #ffffff;
+  --color-neutral-200: #000000;
+  --color-neutral-500: #2a2a35;
+  --color-neutral-700: #000000;
+  --color-neutral-900: #000000;
+}
